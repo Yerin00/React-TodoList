@@ -24,7 +24,7 @@ const TodoList: React.FC = () => {
     localStorage.setItem('todos', JSON.stringify(todos));
     
   }, [todos]);
-  console.log("every renderingtodos:",todos)
+  
   const addTodo = () => {
     if (newTodo) {
       const todo: Todo = {
@@ -48,6 +48,34 @@ const TodoList: React.FC = () => {
     const updatedTodos = todos.filter((todo) => todo.id !== id);
     setTodos(updatedTodos);
   };
+
+
+  const [editedTodo, setEditedTodo] = useState<Todo | null>(null);
+  const [editedTodoText, setEditedTodoText] = useState<string>(''); // 입력 필드 값에 대한 별도의 상태
+
+  const startEditingTodo = (id: string) => {
+    const todoToEdit = todos.find((todo) => todo.id === id);
+    if (todoToEdit) {
+      setEditedTodo(todoToEdit);
+      setEditedTodoText(todoToEdit.text); // 입력 필드의 값을 todo 텍스트로 초기화
+    }
+  };
+
+  const handleEditTodo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedTodoText(e.target.value); // 입력 필드 값 상태를 업데이트
+  };
+
+  const finishEditingTodo = () => {
+    if (editedTodo) {
+      const updatedTodo = { ...editedTodo, text: editedTodoText }; // todo 객체에서 텍스트 업데이트
+      const updatedTodos = todos.map((todo) =>
+        todo.id === editedTodo.id ? updatedTodo : todo
+      );
+      setTodos(updatedTodos);
+      setEditedTodo(null);
+    }
+  };
+
 
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
@@ -88,16 +116,33 @@ const TodoList: React.FC = () => {
       <ul className='mt-4'>  
         {todos.map((todo) => (
           <li key={todo.id}>
-            <input
-              className='mr-2'
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => toggleTodo(todo.id)}
-            />
-            <span className={ (todo.completed ? 'line-through' : 'none') + " mr-2" }>
-              {todo.text}
-            </span>
-            <button onClick={() => deleteTodo(todo.id)}>×</button>
+            {editedTodo === todo ? (
+              <div>
+
+                <input
+                  className="border-b border-gray-300 focus:outline-none"
+                  type="text"
+                  value={editedTodoText}
+                  onChange={handleEditTodo}
+                  // onBlur={finishEditingTodo}
+                  autoFocus
+                />
+                <button className="text-gray-400" onClick={finishEditingTodo}>저장</button>
+              </div>
+            ) : (
+              <>
+                <input
+                  className="mr-2"
+                  type="checkbox"
+                  checked={todo.completed}
+                  onChange={() => toggleTodo(todo.id)}
+                />
+                <span className={todo.completed ? 'line-through' : 'none'}>{todo.text}</span>
+                <button className="ml-4 mr-2 text-gray-400" onClick={() => startEditingTodo(todo.id)}>수정</button>
+                <button className="text-red-400" onClick={() => deleteTodo(todo.id)}>×</button>
+              </>
+            )}
+           
           </li>
         ))}
       </ul>
