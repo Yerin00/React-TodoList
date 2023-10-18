@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import useResizeScreen from '../hooks/useResizeScreen';
 
 const Weather: React.FC = () => {
   const [weather, setWeather] = useState<any | null>(null);
@@ -41,26 +42,35 @@ const Weather: React.FC = () => {
 
   }, []);
 
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const screenWidth = useResizeScreen()
+
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    // 화면 크기가 변경될 때마다 실행되는 함수
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
+    // 1분마다 현재 시간을 업데이트
+    const intervalId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000)
 
-    // 화면 크기 변경 이벤트 리스너 추가
-    window.addEventListener('resize', handleResize);
-
-    // 컴포넌트가 언마운트될 때 이벤트 리스너 제거
+    // 컴포넌트가 언마운트될 때 clearInterval을 호출하여 타이머를 정리
     return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []); // 빈 배열을 전달하여 컴포넌트가 마운트될 때 한 번만 실행
+      clearInterval(intervalId);
+    }
+  }, [])
+
+  // 현재 시간을 예쁘게 표시하기 위한 함수
+  const formatTime = (date:Date) => {
+    const year = date.getFullYear().toString()
+    const month = date.getMonth().toString()
+    const day = date.getDate().toString()
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`
+  }
 
   if (!weather) {
     return (
-      <div className={(screenWidth > 675?'w-1/2':'mt-4')+' text-gray-600 p-8 bg-white rounded-xl w-1/2 h-32'}>
+      <div className={(screenWidth > 750?'w-1/2':'mt-4')+' text-gray-600 p-8 bg-white rounded-xl w-1/2 h-32'}>
           <div role="status">
           <svg aria-hidden="true" className="inline w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-green-500" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
@@ -73,10 +83,13 @@ const Weather: React.FC = () => {
   }
 
   return (
-    <div className={(screenWidth > 675?'w-1/2':'mt-4')+' text-gray-600 p-8 bg-white rounded-xl h-32'}>
+    <div className={(screenWidth > 750?'w-1/2':'mt-4')+' text-gray-600 p-8 bg-white rounded-xl h-32'}>
         <span>Weather in </span><span className='text-gray-800 font-bold'>{city}</span>
         <br />
         <span className='text-xl'>{weather} / </span><span className='text-xl text-gray-800 font-bold'>{temperature}°C</span>
+        <div className='text-gray-400 text-sm mt-1'>
+        {formatTime(currentTime)}
+        </div>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 // src/components/TodoList.tsx
 
 import React, { useState, useEffect } from 'react';
+import useResizeScreen from '../hooks/useResizeScreen';
 
 interface Todo {
   id: string;
@@ -22,10 +23,10 @@ const TodoList: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem('todos', JSON.stringify(todos));
-    
   }, [todos]);
   
-  const addTodo = () => {
+  const addTodo = (e: React.FormEvent<HTMLFormElement>) => { 
+    e.preventDefault()
     if (newTodo) {
       const todo: Todo = {
         id: Date.now().toString(),
@@ -51,18 +52,18 @@ const TodoList: React.FC = () => {
 
 
   const [editedTodo, setEditedTodo] = useState<Todo | null>(null);
-  const [editedTodoText, setEditedTodoText] = useState<string>(''); // 입력 필드 값에 대한 별도의 상태
+  const [editedTodoText, setEditedTodoText] = useState<string>(''); // 입력 값에 대한 별도의 상태
 
   const startEditingTodo = (id: string) => {
     const todoToEdit = todos.find((todo) => todo.id === id);
     if (todoToEdit) {
       setEditedTodo(todoToEdit);
-      setEditedTodoText(todoToEdit.text); // 입력 필드의 값을 todo 텍스트로 초기화
+      setEditedTodoText(todoToEdit.text); // 입력 값을 todo 텍스트로 초기화
     }
   };
 
   const handleEditTodo = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditedTodoText(e.target.value); // 입력 필드 값 상태를 업데이트
+    setEditedTodoText(e.target.value); // 입력 값 상태를 업데이트
   };
 
   const finishEditingTodo = () => {
@@ -77,29 +78,15 @@ const TodoList: React.FC = () => {
   };
 
 
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
-  useEffect(() => {
-    // 화면 크기가 변경될 때마다 실행되는 함수
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
-
-    // 화면 크기 변경 이벤트 리스너 추가
-    window.addEventListener('resize', handleResize);
-
-    // 컴포넌트가 언마운트될 때 이벤트 리스너 제거
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []); // 빈 배열을 전달하여 컴포넌트가 마운트될 때 한 번만 실행
+  const screenWidth = useResizeScreen()
 
   return (
-    <div className={(screenWidth > 675?'w-1/2':'')+' p-8 bg-white rounded-xl '}>
+    <div className={(screenWidth > 750?'w-1/2':'')+' p-8 bg-white rounded-xl '}>
       {/* title */}
       <h2 className='font-bold text-2xl'>TODO LIST</h2>
-      {/* To Do contents input */}
-      <div>
+      {/* input */}
+      <form onSubmit={addTodo}>
         <input
           className="border-b border-gray-300 p-2 focus:outline-none"
           type="text"
@@ -107,12 +94,13 @@ const TodoList: React.FC = () => {
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
         />
-        {/* Add To Do */}
-        <button onClick={addTodo} type="button" className="ml-2 text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">ADD</button>
+        {/* Add Button */}
+        <button type="submit" className={(screenWidth>380?"ml-2":"w-[197px] mt-4")+" text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2"}>ADD</button>
         
-      </div>
+      </form>
       
-      {/* To Do List */}
+      
+      {/* ToDo List */}
       <ul className='mt-4'>  
         {todos.map((todo) => (
           <li key={todo.id}>

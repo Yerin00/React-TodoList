@@ -4,32 +4,44 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Weather from './components/WeatherComponent';
 import TodoList from './components/TodoListComponent';
+import useResizeScreen from './hooks/useResizeScreen';
 
 function App() {
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  
+  const screenWidth = useResizeScreen()
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    // 화면 크기가 변경될 때마다 실행되는 함수
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
+    // 1분마다 현재 시간을 업데이트
+    const intervalId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
 
-    // 화면 크기 변경 이벤트 리스너 추가
-    window.addEventListener('resize', handleResize);
-
-    // 컴포넌트가 언마운트될 때 이벤트 리스너 제거
+    // 컴포넌트가 언마운트될 때 clearInterval을 호출하여 타이머를 정리
     return () => {
-      window.removeEventListener('resize', handleResize);
+      clearInterval(intervalId);
     };
-  }, []); // 빈 배열을 전달하여 컴포넌트가 마운트될 때 한 번만 실행
+  }, []);
+
+  // 현재 시간을 예쁘게 표시하기 위한 함수
+  const formatTime = (date:Date) => {
+    const year = date.getFullYear().toString()
+    const month = date.getMonth().toString()
+    const day = date.getDate().toString()
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
+  };
 
   return (
     <div className="App">
       <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-4">
-        <h1 className="font-bold text-white text-3xl">Welcome!</h1>
-        <p className='text-gray-300'>You Can manage your To Do List. </p>
+        
+        <h1 className="font-bold text-white text-3xl">TODOLIST and Weather!</h1>
+        <p className='text-white/70'>You Can manage your To Do List. </p>
+        
       </header>
-      <main className={(screenWidth>675?'flex gap-4':'')+' h-full bg-gray-200 p-4'}>
+      <main className={(screenWidth>750?'flex flex-row gap-4':'flex flex-col gap-4')+' h-full bg-gray-200 p-4'}>
         <TodoList />
         <Weather />
       </main>
